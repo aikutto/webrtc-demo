@@ -18,6 +18,7 @@
         }
 
         #remote-video-container {
+            overflow: hidden;
             background: black;
             position: fixed;
             top: 56px;
@@ -27,6 +28,8 @@
         }
 
         #local-video-container {
+            overflow: hidden;
+            object-fit: cover;
             background: red;
             position: fixed;
             width: 25vw;
@@ -34,6 +37,19 @@
             right: 10px;
             bottom: 66px;
         }
+
+        #remote-video-container > video, #local-video-container > video {
+            position: absolute;
+            min-width: 100%;
+            min-height: 100%;
+            width: 100%;
+            height: 100%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+
     </style>
 </head>
 
@@ -68,7 +84,7 @@
     <div v-else-if="username!=null">
         <div id="remote-video-container">
             <video></video>
-            <div class="col-md-4 offset-md-4 mt-4">
+            <div v-if="usernameToCall==null" class="col-md-4 offset-md-4 mt-4">
                 <form @submit.prevent="callUsername()" class="d-grid">
                     <input type="text" class="form-control" aria-describedby="passwordHelpBlock"
                            v-model="callUsernameForm.username" required placeholder="Username">

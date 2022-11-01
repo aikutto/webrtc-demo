@@ -14,13 +14,21 @@ const server = app.listen(3000, () => {
 const {Server} = require('socket.io');
 const io = new Server(server);
 
+const getUsernameBySocketId = (socketId) => {
+    for (const username of Object.keys(users)) {
+        if (users[username].socketId === socketId) {
+            return username;
+        }
+    }
+    return null;
+}
+
 io.on('connection', (socket) => {
     socket.on('disconnect', () => {
-        Object.keys(users).forEach((username) => {
-            if (users[username].socketId === socket.id) {
-                delete users[username];
-            }
-        });
+        const username = getUsernameBySocketId(socket.id);
+        if (username) {
+            delete users[username];
+        }
     });
     socket.on('set-username', (username) => {
         if (!users[username]) {
@@ -36,6 +44,33 @@ io.on('connection', (socket) => {
                 success: false,
                 message: `Username ${username} is already taken.`
             });
+        }
+    });
+    socket.on('call', (username) => {
+        if (users[username]) {
+            if (!users[username].isBusy) {
+                socket.emit('call-response', {
+                    success: true,
+                    username: username
+                });
+            } else {
+                socket.emit('call-response', {
+                    success: false,
+                    message: `${username} is busy.`
+                });
+            }
+        } else {
+            socket.emit('call-response', {
+                success: false,
+                message: `${username} not found.`
+            });
+        }
+    });
+    socket.on('make-offer', (data) => {
+        const username = getUsernameBySocketId(socket.id);
+        if (username) {
+            users[username]['sdp'] = data.sdp;
+
         }
     });
 });

@@ -24,7 +24,7 @@ createApp({
             if (this.setUsernameForm.username === this.callUsernameForm.username) {
                 this.callUsernameFormErrorMessage = 'You can not call yourself.';
             } else {
-
+                this.socket.emit('call', this.callUsernameForm.username);
             }
         }
     },
@@ -54,5 +54,17 @@ createApp({
                 }
             }
         );
+        this.socket.on('call-response', (data) => {
+            if (data.success) {
+                this.pc.createOffer().then((sdp) => {
+                    this.socket.emit('make-offer', {
+                        username: data.username,
+                        sdp: sdp
+                    });
+                });
+            } else {
+                this.callUsernameFormErrorMessage = data.message;
+            }
+        });
     }
 }).mount('#app');
