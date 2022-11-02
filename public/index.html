@@ -84,7 +84,7 @@
     </div>
     <div v-else-if="username!=null">
         <div id="remote-video-container">
-            <video v-bind:src="remoteSrc"></video>
+            <video id="remote-video" autoplay></video>
             <div v-if="usernameToCall==null" class="col-md-4 offset-md-4 mt-4">
                 <form @submit.prevent="callUsername()" class="d-grid">
                     <input type="text" class="form-control" aria-describedby="passwordHelpBlock"
@@ -99,7 +99,7 @@
             </div>
         </div>
         <div id="local-video-container">
-            <video></video>
+            <video id="local-video" autoplay muted></video>
         </div>
     </div>
 </main>

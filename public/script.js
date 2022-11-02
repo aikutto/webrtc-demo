@@ -14,8 +14,7 @@ createApp({
                 username: null,
             },
             callUsernameFormErrorMessage: '',
-            localSrc: null,
-            remoteSrc: null
+            tracks: []
         };
     },
     methods: {
@@ -44,12 +43,12 @@ createApp({
                             {urls: 'stun:stunserver.org'},]
                     });
                     navigator.mediaDevices.getUserMedia({
-                        // video: true,
+                        video: true,
                         audio: true,
                     }).then((stream) => {
+                        document.getElementById('local-video').srcObject = stream;
                         stream.getTracks().forEach((track) => {
                             this.pc.addTrack(track);
-                            console.log(track);
                         });
                     });
                     this.pc.onicecandidate = (e) => {
@@ -59,8 +58,7 @@ createApp({
                         });
                     };
                     this.pc.ontrack = (e) => {
-                        console.log(e.streams);
-                        this.remoteSrc = 'a';
+                        document.getElementById('local-video').srcObject = e.streams[0];
                     };
                 } else {
                     this.setUsernameFormErrorMessage = data.message;
@@ -96,8 +94,9 @@ createApp({
             this.pc.setRemoteDescription(data.user.sdp);
         });
         this.socket.on('exchange', (candidate) => {
-            console.log(candidate);
-            this.pc.addIceCandidate(candidate);
+            if (candidate) {
+                this.pc.addIceCandidate(candidate);
+            }
         });
     }
 }).mount('#app');
