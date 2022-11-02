@@ -69,8 +69,27 @@ io.on('connection', (socket) => {
     socket.on('make-offer', (data) => {
         const username = getUsernameBySocketId(socket.id);
         if (username) {
-            users[username]['sdp'] = data.sdp;
-
+            users[username].sdp = data.sdp;
+            const calleeSocketId = users[data.username].socketId;
+            io.to(calleeSocketId).emit('call', {
+                username: username,
+                user: users[username]
+            });
         }
+    });
+    socket.on('make-answer', (data) => {
+        const username = getUsernameBySocketId(socket.id);
+        if (username) {
+            users[username].sdp = data.sdp;
+            const callerSocketId = users[data.username].socketId;
+            io.to(callerSocketId).emit('make-answer-response', {
+                username: username,
+                user: users[username]
+            });
+        }
+    });
+    socket.on('exchange', (data) => {
+        const socketId = users[data.username].socketId;
+        io.to(socketId).emit('exchange', data.candidate);
     });
 });

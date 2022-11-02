@@ -14,6 +14,8 @@ createApp({
                 username: null,
             },
             callUsernameFormErrorMessage: '',
+            localSrc: null,
+            remoteSrc: null
         };
     },
     methods: {
@@ -47,8 +49,19 @@ createApp({
                     }).then((stream) => {
                         stream.getTracks().forEach((track) => {
                             this.pc.addTrack(track);
+                            console.log(track);
                         });
                     });
+                    this.pc.onicecandidate = (e) => {
+                        this.socket.emit('exchange', {
+                            username: this.usernameToCall,
+                            candidate: e.candidate
+                        });
+                    };
+                    this.pc.ontrack = (e) => {
+                        console.log(e.streams);
+                        this.remoteSrc = 'a';
+                    };
                 } else {
                     this.setUsernameFormErrorMessage = data.message;
                 }
@@ -56,7 +69,9 @@ createApp({
         );
         this.socket.on('call-response', (data) => {
             if (data.success) {
+                this.usernameToCall = data.username;
                 this.pc.createOffer().then((sdp) => {
+                    this.pc.setLocalDescription(sdp);
                     this.socket.emit('make-offer', {
                         username: data.username,
                         sdp: sdp
@@ -65,6 +80,24 @@ createApp({
             } else {
                 this.callUsernameFormErrorMessage = data.message;
             }
+        });
+        this.socket.on('call', (data) => {
+            this.usernameToCall = data.username;
+            this.pc.setRemoteDescription(data.user.sdp);
+            this.pc.createAnswer().then((sdp) => {
+                this.pc.setLocalDescription(sdp);
+                this.socket.emit('make-answer', {
+                    username: data.username,
+                    sdp: sdp
+                });
+            });
+        });
+        this.socket.on('make-answer-response', (data) => {
+            this.pc.setRemoteDescription(data.user.sdp);
+        });
+        this.socket.on('exchange', (candidate) => {
+            console.log(candidate);
+            this.pc.addIceCandidate(candidate);
         });
     }
 }).mount('#app');
