@@ -15,6 +15,8 @@ npm start
 
 Open `http://localhost:3000` in browser and enjoy 🎉️
 
+![ss.png](assets/ss.png)
+
 # Technologies
 
 * Node.js
