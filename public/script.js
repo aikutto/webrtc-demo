@@ -7,7 +7,7 @@ createApp({
             setUsernameForm: {
                 username: null,
             },
-            setUsernameFormErrorMessage: 'Please provide an username.',
+            setUsernameFormErrorMessage: 'Please provide a username.',
             pc: null,
             usernameToCall: null,
             callUsernameForm: {
@@ -33,33 +33,36 @@ createApp({
         this.socket.on('set-username-response', (data) => {
                 if (data.success) {
                     this.username = data.username;
-                    this.pc = new RTCPeerConnection({
-                        iceServers: [
-                            {urls: 'stun:stun.l.google.com:19302'},
-                            {urls: 'stun:stun1.l.google.com:19302'},
-                            {urls: 'stun:stun2.l.google.com:19302'},
-                            {urls: 'stun:stun3.l.google.com:19302'},
-                            {urls: 'stun:stun4.l.google.com:19302'},
-                            {urls: 'stun:stunserver.org'},]
-                    });
                     navigator.mediaDevices.getUserMedia({
                         video: true,
                         audio: true,
                     }).then((stream) => {
                         document.getElementById('local-video').srcObject = stream;
+                        this.pc = new RTCPeerConnection({
+                            iceServers: [
+                                {urls: 'stun:stun.l.google.com:19302'},
+                                {urls: 'stun:stun1.l.google.com:19302'},
+                                {urls: 'stun:stun2.l.google.com:19302'},
+                                {urls: 'stun:stun3.l.google.com:19302'},
+                                {urls: 'stun:stun4.l.google.com:19302'},
+                                {urls: 'stun:stunserver.org'},]
+                        });
                         stream.getTracks().forEach((track) => {
                             this.pc.addTrack(track);
                         });
+                        this.pc.onicecandidate = (e) => {
+                            this.socket.emit('exchange', {
+                                username: this.usernameToCall,
+                                candidate: e.candidate
+                            });
+                        };
+                        this.pc.ontrack = (e) => {
+                            this.tracks.push(e.track);
+                            document.getElementById('remote-video').srcObject = new MediaStream(this.tracks);
+                        };
+                    }).catch((reason)=>{
+                        alert(reason);
                     });
-                    this.pc.onicecandidate = (e) => {
-                        this.socket.emit('exchange', {
-                            username: this.usernameToCall,
-                            candidate: e.candidate
-                        });
-                    };
-                    this.pc.ontrack = (e) => {
-                        document.getElementById('local-video').srcObject = e.streams[0];
-                    };
                 } else {
                     this.setUsernameFormErrorMessage = data.message;
                 }
