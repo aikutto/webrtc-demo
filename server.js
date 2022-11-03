@@ -8,8 +8,8 @@ app.use(parser.urlencoded({extended: true}));
 
 let users = {};
 
-const server = app.listen(3000, () => {
-    console.log('listening on *:3000');
+const server = app.listen((process.env.PORT || 3000), () => {
+    console.log('listening on *:' + (process.env.PORT || 3000));
 });
 const {Server} = require('socket.io');
 const io = new Server(server);
